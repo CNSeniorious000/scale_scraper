@@ -1,0 +1,6 @@
+secret/*
+.idea/*
+.vscode/*
+*/__pycache__
+*/.benchmarks
+*/.pytest_cache
