@@ -6,7 +6,7 @@ import requests
 class OBHRM:
     # noinspection HttpUrlsUsage
     base = "http://www.obhrm.net"
-    __current_page = None
+    _current_page = None
 
     @classmethod
     @cache
@@ -16,17 +16,18 @@ class OBHRM:
 
     @property
     def current_page(self):
-        return self.__current_page or self.root_page
+        return self._current_page or self.root_page
 
     @cached_property
     def root_page(self) -> BeautifulSoup:
         return BeautifulSoup(self.get("/index.php/栏目:研究量表").text, "lxml")
 
-    @classmethod
-    def turn_to_next_page(cls):
-        cls.__current_page = ...
+    def turn_to_next_page(self):
+        tag = self.current_page.find_all("div")[2].find_all("div")[4].find_all("div")[3].div.div.find_all("a")[-1]
+        assert tag.text == "下一页"
+        self._current_page = BeautifulSoup(self.get(tag["href"]).text, "lxml")
 
-    @cached_property
+    @property
     def groups(self) -> list[BeautifulSoup]:
         return self.current_page.find_all("div")[2].find_all("div")[4].find_all("div")[3].find_all("div")[4:]
 
@@ -34,6 +35,15 @@ class OBHRM:
     @cache
     def get_paths(group: BeautifulSoup) -> list[str]:
         return [li.a["href"] for li in group.find_all("li")]
+
+    @cached_property
+    def all_paths(self) -> list[str]:
+        paths = sum(map(self.get_paths, self.groups), [])
+        self.turn_to_next_page()
+        paths.extend(sum(map(self.get_paths, self.groups), []))
+        self.turn_to_next_page()
+        paths.extend(sum(map(self.get_paths, self.groups), []))
+        return paths
 
     @cache
     def parse_page(self, path: str) -> tuple[str, list[tuple[str, list[str]]]]:
@@ -68,6 +78,4 @@ class OBHRM:
 obhrm = OBHRM()
 
 if __name__ == '__main__':
-    _, results = obhrm.parse_page(obhrm.get_paths(obhrm.groups[4])[6])
-    print(results[2][1][-1])
-    print(results[2][1][-2])
+    assert len(obhrm.all_paths) == 531
