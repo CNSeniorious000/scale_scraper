@@ -20,6 +20,8 @@ def create_all():
     return SQLModel.metadata.create_all(engine)
 
 
+__all__ = ["engine", "create_all", "SQLModel", "Field", "Session"]
+
 if __name__ == '__main__':
     from random import randrange
 

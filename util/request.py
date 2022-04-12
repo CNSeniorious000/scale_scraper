@@ -52,27 +52,34 @@ class OBHRM:
         title = soup.head.title.text.removesuffix(" - OBHRM百科")
         toc: BeautifulSoup = soup.body.find_all("div")[2].find_all("div")[3].find_all("div")[3].div
 
-        main_body = []
+        content = []
         for tag in toc.find_next_siblings():
             if tag.name == "p":
-                main_body[-1][1].append(tag.text.strip())
+                content[-1][1].append(tag.text.strip())
                 if tag.a is not None:
-                    main_body[-1][1].append(self.base + self.get_resource_url(tag.a["href"]))
+                    content[-1][1].append(self.base + self.get_resource_url(tag.a["href"]))
 
             elif tag.name == "h2":
                 new_subtitle = tag.text
-                main_body.append((new_subtitle, []))
+                content.append((new_subtitle, []))
             elif tag.name == "pre":
-                main_body[-1][1].append(tag.text.strip())
+                content[-1][1].append(tag.text.strip())
             else:
-                raise ValueError(tag)
+                content[-1][1].append(tag.text.strip())
+                print()
+                print(f"{tag.prettify() = }")
+                print(f"{tag.text.strip() = }")
+                print()
 
-        return title, main_body
+        return title, content
 
     @classmethod
     @cache
     def get_resource_url(cls, url: str) -> str:
-        return BeautifulSoup(cls.get(url).text, "lxml").select_one(".internal")["href"]
+        if url.startswith("/index.php/"):
+            return BeautifulSoup(cls.get(url).text, "lxml").select_one(".internal")["href"]
+        else:
+            return url
 
 
 obhrm = OBHRM()
