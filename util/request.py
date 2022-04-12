@@ -15,16 +15,26 @@ def parse_group(group):
     return [li.a["href"] for li in group.find_all("li")]
 
 
-for i in parse_group(groups[0]):
-    print(base + i)
-
-
+# noinspection PyShadowingNames
 def parse_page(path):
     page = BeautifulSoup(requests.get(base + path).text)
     title = page.head.title.text.removesuffix(" - OBHRM百科")
     body = page.body.find_all("div")[2].find_all("div")[3].find_all("div")[3]
 
-    list_of_h2 = [h2.text for h2 in body.find_all("h2")]
-    list_of_p = body.find_all("p")
+    toc = body.div
 
-    return title, list_of_h2, list_of_p
+    results = []
+    for tag in toc.find_next_siblings():
+        if tag.name == "h2":
+            new_title = tag.text
+            results.append((new_title, []))
+        elif tag.name == "p":
+            results[-1][1].append(tag)
+        else:
+            print(tag)
+            results[-1][1].append(tag)
+
+    return title, results
+
+
+title, results = parse_page(parse_group(groups[2])[2])
