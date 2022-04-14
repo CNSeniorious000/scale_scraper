@@ -32,7 +32,7 @@ def find_best_match(query: str, n: int = 3) -> list[str]:
     return [title for title, score in extractBests(query, data_keys, limit=n)]
 
 
-@app.get("/scales/{text}")
-def get_scale_content(text: str) -> list[tuple]:
+@app.get("/scales/{title}")
+def get_scale_content(title: str) -> list[tuple]:
     """得到某个量表的正文json数据，格式为 ``list[tuple[str, list[str]]]``"""
-    return data_map[find_best_match(text)[0]]
+    return data_map[find_best_match(title, 1)[0]]
