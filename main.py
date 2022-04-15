@@ -2,7 +2,7 @@ from pickle import load
 from random import shuffle
 from fastapi import FastAPI
 from functools import cache
-from thefuzz.process import extractBests
+from rapidfuzz.process import extract, extractOne
 
 data_map = dict(load(open("data.pkl", "rb")))
 app = FastAPI(title="APIs about OBHRM scales wiki")
@@ -27,12 +27,13 @@ def get_random(n: int = 10) -> list[str]:
 
 @app.get("/scales/query/{query}", name="find_best_match")
 @cache
-def find_best_match(query: str, n: int = 3) -> list[str]:
+def find_best_match(query: str, n: int = 3) -> dict[str, int]:
     """模糊搜索，返回前n个结果，结果有缓存"""
-    return [title for title, score in extractBests(query, data_keys, limit=n)]
+    return {title: score for title, score, index in extract(query, data_keys, limit=n)}
 
 
 @app.get("/scales/{title}")
 def get_scale_content(title: str) -> list[tuple]:
     """得到某个量表的正文json数据，格式为 ``list[tuple[str, list[str]]]``"""
-    return data_map[find_best_match(title, 1)[0]]
+    key, score, index = extractOne(title, data_keys)
+    return data_map[key]
