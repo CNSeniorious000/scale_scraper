@@ -1,5 +1,6 @@
 from functools import cached_property, cache
 from bs4 import BeautifulSoup
+from rich import *
 import requests
 
 
@@ -46,30 +47,29 @@ class OBHRM:
         return paths
 
     @cache
-    def parse_page(self, path: str) -> tuple[str, list[tuple[str, list[str]]]]:
+    def parse_page(self, path: str) -> tuple[str, dict[str, list[str]]]:
         soup = BeautifulSoup(self.get(path).text, "lxml")
         # body = soup.body.find_all("div")[2].find_all("div")[3].find_all("div")[3]
         title = soup.head.title.text.removesuffix(" - OBHRM百科")
         toc: BeautifulSoup = soup.body.find_all("div")[2].find_all("div")[3].find_all("div")[3].div
 
-        content = []
+        content = {}
+        paragraphs = None
         for tag in toc.find_next_siblings():
-            if tag.name == "p":
-                content[-1][1].append(tag.text.strip())
-                if tag.a is not None:
-                    content[-1][1].append(self.base + self.get_resource_url(tag.a["href"]))
+            tag: BeautifulSoup
 
-            elif tag.name == "h2":
+            if tag.name == "h2":
                 new_subtitle = tag.text
-                content.append((new_subtitle, []))
+                content[new_subtitle] = paragraphs = []
+            elif tag.name == "p":
+                paragraphs.append(tag.text.strip())
+                if tag.a is not None:
+                    paragraphs.append(self.base + self.get_resource_url(tag.a["href"]))
             elif tag.name == "pre":
-                content[-1][1].append(tag.text.strip())
+                paragraphs.append(tag.text.strip())
             else:
-                content[-1][1].append(tag.text.strip())
-                print()
-                print(f"{tag.prettify() = }")
-                print(f"{tag.text.strip() = }")
-                print()
+                print(f"\n{tag.prettify() = !s}\n{tag.text.strip() = !s}\n")
+                paragraphs.append(tag.text.strip())
 
         return title, content
 
