@@ -19,8 +19,8 @@ def get_scale_list():
 data_keys = get_scale_list().copy()
 
 
-@app.get("/scales/random/")
-def get_random(n: int = 10) -> list[str]:
+@app.get("/scales/random/{n}")
+def get_random(n: int) -> list[str]:
     """随机获取n个量表标题，每次请求都会重新计算"""
     shuffle(data_keys)
     return data_keys[:n]
