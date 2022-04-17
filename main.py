@@ -46,6 +46,6 @@ def search_by_content(text: str, n: int = 3) -> list[str]:
 
 @app.get("/scales/{title}")
 def get_scale_content(title: str) -> list[tuple]:
-    """得到某个量表的正文json数据，格式为 ``list[tuple[str, list[str]]]``"""
+    """得到某个量表的正文json数据，格式为 ``dict[str, list[str]]``"""
     key, score, index = extractOne(title, data_keys)
     return data_map[key]
